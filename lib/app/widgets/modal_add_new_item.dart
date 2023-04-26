@@ -63,7 +63,7 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
                     EdgeInsets.symmetric(horizontal: 0, vertical: 15),
               ),
               onChanged: (value) {
-                // nameProduct = value;
+                nameProduct = value;
               },
             ),
             const SizedBox(
@@ -129,8 +129,15 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
                 ),
                 ElevatedButton(
                     onPressed: () {
-                      final Product newProduct = Product(nameCity, randomId(), group,
-                          nameProduct, price, quantity, sum());
+                      final Product newProduct = Product(
+                          date: DateTime.now().millisecondsSinceEpoch,
+                          nameCity: nameCity,
+                          nameProduct: nameProduct,
+                          price: price,
+                          quantity: quantity,
+                          status: group,
+                          sum: sum(),
+                          uid: randomId());
                       widget.onPressed(newProduct);
                     },
                     child: const Text('Сохранить'))

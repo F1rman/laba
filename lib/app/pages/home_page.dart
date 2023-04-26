@@ -18,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   late List<Product> filteredProducts = [];
 
   final List<String> category = [
+    'Дата',
     'название города',
     'uid',
     'статус',
@@ -34,7 +35,7 @@ class _HomePageState extends State<HomePage> {
         .decode(Storage.getValue('products') ?? '[]')
         .map<Product>((item) => Product.fromJson(item))
         .toList();
-        filteredProducts = products;
+    filteredProducts = products;
     setState(() {});
     super.initState();
   }
@@ -64,7 +65,7 @@ class _HomePageState extends State<HomePage> {
                               EdgeInsets.symmetric(horizontal: 0, vertical: 15),
                         ),
                         onChanged: (value) {
-                          if (value.isEmpty){
+                          if (value.isEmpty) {
                             filteredProducts = products;
                             setState(() {});
                             return;
@@ -103,6 +104,10 @@ class _HomePageState extends State<HomePage> {
                             },
                           ),
                           cells: [
+                            DataCell(
+                              Text(
+                                  '${DateTime.fromMillisecondsSinceEpoch(item.date).toLocal()}'),
+                            ),
                             DataCell(
                               Text(item.nameCity),
                             ),
@@ -144,6 +149,7 @@ class _HomePageState extends State<HomePage> {
                       var newProducts = products
                           .map((Product item) => item.toJson())
                           .toList();
+
                       Storage.saveValue('products', json.encode(newProducts));
                     });
 
