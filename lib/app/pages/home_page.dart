@@ -25,7 +25,8 @@ class _HomePageState extends State<HomePage> {
     'название товара',
     'цена',
     'кол-во',
-    'полная стоимость лота'
+    'полная стоимость лота',
+    'действия',
   ];
 
   @override
@@ -129,6 +130,46 @@ class _HomePageState extends State<HomePage> {
                             DataCell(
                               Text(item.sum.toString()),
                             ),
+                            DataCell(Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () => {
+                                    setState(() {
+                                      if (item.status == 1) {
+                                        item.status = 0;
+                                      } else {
+                                        item.status = 1;
+                                      }
+                                      var newProducts = products
+                                          .map((Product item) => item.toJson())
+                                          .toList();
+
+                                      Storage.saveValue(
+                                          'products', json.encode(newProducts));
+                                    })
+                                  },
+                                  icon: Icon(item.status == 1
+                                      ? Icons.sell_rounded
+                                      : Icons.sell_outlined),
+                                  color: Colors.green,
+                                ),
+                                IconButton(
+                                  onPressed: () => {
+                                    setState(() {
+                                      products.remove(item);
+                                      var newProducts = products
+                                          .map((Product item) => item.toJson())
+                                          .toList();
+
+                                      Storage.saveValue(
+                                          'products', json.encode(newProducts));
+                                    })
+                                  },
+                                  icon: Icon(Icons.remove_circle),
+                                  color: Colors.red,
+                                ),
+                              ],
+                            )),
                           ],
                         ),
                       )

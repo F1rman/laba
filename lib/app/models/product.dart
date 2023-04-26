@@ -4,7 +4,7 @@ class Product {
   final String nameCity;
   final int date;
   final int uid;
-  final int status;
+   int status;
   final String nameProduct;
   final int price;
   final int quantity;
