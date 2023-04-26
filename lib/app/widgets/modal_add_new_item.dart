@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:laba/app/models/product.dart';
+import 'dart:math';
 
 class ModalAddNewItem extends StatefulWidget {
   const ModalAddNewItem({super.key, this.onPressed});
@@ -29,8 +30,8 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
   }
 
   int randomId() {
-    setState(() {});
-    return uid++;
+    var rng = Random();
+    return rng.nextInt(10000);
   }
 
   @override
@@ -128,8 +129,8 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
                 ),
                 ElevatedButton(
                     onPressed: () {
-                      final Product newProduct = Product(nameCity, uid, group,
-                        nameProduct, price, quantity, sum());
+                      final Product newProduct = Product(nameCity, randomId(), group,
+                          nameProduct, price, quantity, sum());
                       widget.onPressed(newProduct);
                     },
                     child: const Text('Сохранить'))
