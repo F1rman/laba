@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:laba/app/controllers/firestore.dart';
 import 'package:laba/app/storage/storage.dart';
 import 'package:laba/app/widgets/modal_add_new_item.dart';
 
@@ -16,7 +18,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late List<Product> products = [];
   late List<Product> filteredProducts = [];
-
+  var firestore = Get.find<FirestoreController>();
   final List<String> category = [
     'Дата',
     'название города',
@@ -31,7 +33,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    print('${Storage.getValue('products')}');
     products = json
         .decode(Storage.getValue('products') ?? '[]')
         .map<Product>((item) => Product.fromJson(item))
@@ -82,6 +83,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
+              Obx(() => Text('${firestore.userDataModel.value.name}')),
               DataTable(
                   decoration:
                       BoxDecoration(border: Border.all(color: Colors.grey)),
@@ -184,6 +186,7 @@ class _HomePageState extends State<HomePage> {
               context: context,
               builder: (BuildContext context) {
                 return ModalAddNewItem(
+                  products: products,
                   onPressed: (Product newProduct) {
                     setState(() {
                       products.add(newProduct);
