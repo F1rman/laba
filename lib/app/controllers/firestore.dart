@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:laba/app/controllers/global_controller.dart';
+import 'package:laba/app/models/product.dart';
 import 'package:laba/app/models/user/user_model.dart';
 
 import 'auth.dart';
@@ -70,6 +72,48 @@ class FirestoreController extends GetxController {
         .catchError((error) => print('Failed to add user: $error'));
   }
 
+  Future<QuerySnapshot<Map<String, dynamic>>> getTable() async {
+    print('${uid} udiddidididi');
+    
+    return await firestore
+        .collection('tables')
+        .doc(uid)
+        .collection('table')
+        .get();
+  }
+
+  Future<void> updateTableRow(
+      {required Map<String, dynamic> obj, required String id}) {
+    return firestore
+        .collection('tables')
+        .doc(uid)
+        .collection('table')
+        .doc(id)
+        .set(obj)
+        .then((value) => print('table row Updated'))
+        .catchError((error) => {
+              firestore
+                  .collection('tables')
+                  .doc(uid)
+                  .collection('table')
+                  .doc(id)
+                  .set(obj)
+                  .then((value) => print('table row Added'))
+                  .catchError(
+                      (error) => print('Failed set to table row : $error'))
+            });
+  }
+
+  Future<void> removeTableRow({required String id}) {
+    return firestore
+        .collection('tables')
+        .doc(uid)
+        .collection('table')
+        .doc(id)
+        .delete()
+        .then((value) => print('table row removed'));
+  }
+
   Future<void> updateUserById(String? uid, Map<String, dynamic> obj) {
     return firestore
         .collection('users')
@@ -87,6 +131,18 @@ class FirestoreController extends GetxController {
           toFirestore: (user, _) => user.toJson(),
         )
         .doc(uid)
+        .get();
+    return users.data();
+  }
+
+  Future<Map<String, dynamic>?> getTableFields({doc = 'cities'}) async {
+    var users = await firestore
+        .collection('table_fields')
+        // .withConverter<UserModel>(
+        //   fromFirestore: (snapshot, _) => UserModel.fromJson(snapshot.data()!),
+        //   toFirestore: (user, _) => user.toJson(),
+        // )
+        .doc(doc)
         .get();
     return users.data();
   }

@@ -23,13 +23,14 @@ class Initializer {
 
   static void _initApis() async {
     final authController = AuthController();
-    final globalCtrl = GlobalController();
     Get.put<AuthController>(
       authController,
     );
+    final globalCtrl = GlobalController();
     Get.put<GlobalController>(
       globalCtrl,
     );
+
   }
 
   static Future<void> _initStorage() async {
