@@ -39,7 +39,6 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
   }
 
   save() {
-    print('${maxIncrement()}');
     final Product newProduct = Product(
         date: DateTime.now().millisecondsSinceEpoch,
         nameCity: nameCity.value,

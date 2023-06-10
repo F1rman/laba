@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:js_interop';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:laba/app/controllers/auth.dart';
 import 'package:laba/app/controllers/firestore.dart';
 import 'package:laba/app/controllers/global_controller.dart';
 import 'package:laba/app/storage/storage.dart';
@@ -18,7 +20,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late List<Product> products = [];
-  late List<Product> filteredProducts = [];
   var firestore = Get.find<FirestoreController>();
   GlobalController globalController = Get.find();
 
@@ -36,18 +37,10 @@ class _HomePageState extends State<HomePage> {
   ];
   final List<String> status = ['Очікування', 'Виконано', 'Відмінено'];
   @override
-  void initState()  {
-    getTableData();
-    filteredProducts = products;
+  void initState() {
+    // globalController.getTableData();
     setState(() {});
     super.initState();
-  }
-
-  getTableData() async {
-    var rows = await firestore.getTable();
-    globalController.products.value =
-        rows.docs.map((e) => Product.fromJson(e.data())).toList();
-    globalController.loading.value = false;
   }
 
   editPress({item}) {
@@ -106,141 +99,160 @@ class _HomePageState extends State<HomePage> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Obx(
-            () => Column(
-              children: [
-                Container(
-                  margin: EdgeInsets.only(bottom: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search),
-                      Container(
-                        width: 200,
-                        margin: EdgeInsets.only(left: 20),
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 0, vertical: 15),
-                          ),
-                          onChanged: (value) {
-                            if (value.isEmpty) {
-                              filteredProducts = products;
-                              setState(() {});
-                              return;
-                            }
-                            filteredProducts = products
-                                .where((element) =>
-                                    element.nameCity.contains(value))
-                                .toList();
-                            setState(() {});
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (globalController.loading.value)
-                  const CircularProgressIndicator(
-                    color: Colors.blueAccent,
-                  ),
-                if (!globalController.loading.value)
-                  DataTable(
-                      decoration:
-                          BoxDecoration(border: Border.all(color: Colors.grey)),
-                      columns: category.map((item) {
-                        return DataColumn(
-                          label: Container(
-                            child: Text(item),
-                          ),
-                        );
-                      }).toList(),
-                      rows: globalController.products
-                          .map(
-                            (item) => DataRow(
-                              color: MaterialStateColor.resolveWith(
-                                (states) {
-                                  if (item.status == 1) {
-                                    return Colors.green.shade100;
-                                  } else {
-                                    return Colors.white;
-                                  }
-                                },
-                              ),
-                              cells: [
-                                DataCell(
-                                  Text(
-                                      '${DateTime.fromMillisecondsSinceEpoch(item.date).toLocal()}'),
-                                ),
-                                DataCell(
-                                  Text(item.nameCity),
-                                ),
-                                DataCell(
-                                  Text(item.orderId.toString()),
-                                ),
-                                DataCell(
-                                  Text(['продаж', 'купівля'][item.status]
-                                      .toString()),
-                                ),
-                                DataCell(
-                                  Text(item.nameProduct),
-                                ),
-                                DataCell(
-                                  Text(item.price.toString()),
-                                ),
-                                DataCell(
-                                  Text(item.quantity.toString()),
-                                ),
-                                DataCell(
-                                  Text(item.sum.toString()),
-                                ),
-                                DataCell(
-                                  Text(status[item.statusOrder]),
-                                ),
-                                DataCell(Row(
+          child: Column(
+            children: [
+             
+                StreamBuilder(
+                    stream: firestore.getTable(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.connectionState ==
+                              ConnectionState.active ||
+                          snapshot.connectionState == ConnectionState.done) {
+                        globalController.products.value =
+                            snapshot.data!.docs.map((e) {
+                          return Product.fromJson(
+                              e.data() as Map<String, dynamic>);
+                        }).toList();
+                        globalController.filteredProducts.value =
+                            globalController.products;
+                        return Obx(
+                          () => Column(
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(bottom: 20),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    IconButton(
-                                      onPressed: () => editPress(item: item),
-                                      icon: Icon(Icons.edit),
-                                      color: Colors.grey,
-                                    ),
-                                    if (item.statusOrder == 1)
-                                      IconButton(
-                                        onPressed: () => {
-                                          setState(() {
-                                            if (item.status == 1) {
-                                              item.status = 0;
-                                            } else {
-                                              item.status = 1;
-                                            }
-                                            var newProducts = products
-                                                .map((Product item) =>
-                                                    item.toJson())
-                                                .toList();
-
-                                            Storage.saveValue('products',
-                                                json.encode(newProducts));
-                                          })
-                                        },
-                                        icon: Icon(item.status == 1
-                                            ? Icons.sell_rounded
-                                            : Icons.sell_outlined),
-                                        color: Colors.green,
+                                    Icon(Icons.search),
+                                    Container(
+                                      width: 200,
+                                      margin: EdgeInsets.only(left: 20),
+                                      child: TextField(
+                                        decoration: const InputDecoration(
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(
+                                              horizontal: 0, vertical: 15),
+                                        ),
+                                        onChanged: (e) =>
+                                            globalController.onSearch(e),
                                       ),
-                                    IconButton(
-                                      onPressed: () => remove(item),
-                                      icon: Icon(Icons.remove_circle),
-                                      color: Colors.red,
                                     ),
                                   ],
-                                )),
-                              ],
-                            ),
-                          )
-                          .toList()),
-              ],
-            ),
+                                ),
+                              ),
+                              DataTable(
+                                  decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey)),
+                                  columns: category.map((item) {
+                                    return DataColumn(
+                                      label: Container(
+                                        child: Text(item),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  rows: globalController.filteredProducts
+                                      .map(
+                                        (item) => DataRow(
+                                          color: MaterialStateColor.resolveWith(
+                                            (states) {
+                                              if (item.status == 1) {
+                                                return Colors.green.shade100;
+                                              } else {
+                                                return Colors.white;
+                                              }
+                                            },
+                                          ),
+                                          cells: [
+                                            DataCell(
+                                              Text(
+                                                  '${DateTime.fromMillisecondsSinceEpoch(item.date).toLocal()}'),
+                                            ),
+                                            DataCell(
+                                              Text(item.nameCity),
+                                            ),
+                                            DataCell(
+                                              Text(item.orderId.toString()),
+                                            ),
+                                            DataCell(
+                                              Text([
+                                                'продаж',
+                                                'купівля'
+                                              ][item.status]
+                                                  .toString()),
+                                            ),
+                                            DataCell(
+                                              Text(item.nameProduct),
+                                            ),
+                                            DataCell(
+                                              Text(item.price.toString()),
+                                            ),
+                                            DataCell(
+                                              Text(item.quantity.toString()),
+                                            ),
+                                            DataCell(
+                                              Text(item.sum.toString()),
+                                            ),
+                                            DataCell(
+                                              Text(status[item.statusOrder]),
+                                            ),
+                                            DataCell(Row(
+                                              children: [
+                                                IconButton(
+                                                  onPressed: () =>
+                                                      editPress(item: item),
+                                                  icon: Icon(Icons.edit),
+                                                  color: Colors.grey,
+                                                ),
+                                                if (item.statusOrder == 1)
+                                                  IconButton(
+                                                    onPressed: () => {
+                                                      setState(() {
+                                                        if (item.status == 1) {
+                                                          item.status = 0;
+                                                        } else {
+                                                          item.status = 1;
+                                                        }
+                                                        var newProducts = products
+                                                            .map((Product
+                                                                    item) =>
+                                                                item.toJson())
+                                                            .toList();
+
+                                                        Storage.saveValue(
+                                                            'products',
+                                                            json.encode(
+                                                                newProducts));
+                                                      })
+                                                    },
+                                                    icon: Icon(item.status == 1
+                                                        ? Icons.sell_rounded
+                                                        : Icons.sell_outlined),
+                                                    color: Colors.green,
+                                                  ),
+                                                IconButton(
+                                                  onPressed: () => remove(item),
+                                                  icon:
+                                                      Icon(Icons.remove_circle),
+                                                  color: Colors.red,
+                                                ),
+                                              ],
+                                            )),
+                                          ],
+                                        ),
+                                      )
+                                      .toList()),
+                            ],
+                          ),
+                        );
+                      } else {
+                        return Container(
+                          child: Text('No data'),
+                        );
+                      }
+                    }),
+            ],
           ),
         ),
       ),

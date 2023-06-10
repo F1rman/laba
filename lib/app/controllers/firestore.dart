@@ -72,14 +72,12 @@ class FirestoreController extends GetxController {
         .catchError((error) => print('Failed to add user: $error'));
   }
 
-  Future<QuerySnapshot<Map<String, dynamic>>> getTable() async {
-    print('${uid} udiddidididi');
-    
-    return await firestore
+  Stream<QuerySnapshot<Map<String, dynamic>>> getTable() {
+    return firestore
         .collection('tables')
         .doc(uid)
         .collection('table')
-        .get();
+        .snapshots();
   }
 
   Future<void> updateTableRow(
