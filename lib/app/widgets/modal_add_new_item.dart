@@ -11,13 +11,13 @@ class ModalAddNewItem extends StatefulWidget {
   const ModalAddNewItem(
       {super.key,
       this.onPressed,
-      required this.products,
       required this.edit,
-      this.item});
+      this.item,
+      required this.selling});
   final onPressed;
   final bool edit;
+  final bool selling;
   final Product? item;
-  final List<Product> products;
   @override
   State<ModalAddNewItem> createState() => _ModalAddNewItemState();
 }
@@ -33,31 +33,34 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
   int uid = 0;
   RxString nameProduct = ''.obs;
   RxString nameCity = ''.obs;
-
+  RxInt newQuantity = 0.obs;
   int sum() {
-    return price.value * quantity.value;
+    return price.value * newQuantity.value;
   }
 
   save() {
     final Product newProduct = Product(
+        uid: widget.edit ? widget.item!.uid : maxIncrement(),
         date: DateTime.now().millisecondsSinceEpoch,
         nameCity: nameCity.value,
         nameProduct: nameProduct.value,
         price: price.value,
-        quantity: quantity.value,
+        quantity: newQuantity.value,
         status: group.value,
         sum: sum(),
-        orderId: widget.edit ? widget.item!.orderId : maxIncrement(),
+        orderId: widget.edit || widget.selling
+            ? widget.item!.orderId
+            : maxIncrement(),
         statusOrder: orderStatus.value);
     widget.onPressed(newProduct);
   }
 
   int maxIncrement() {
     var maxUid = 0;
-    if (widget.products.isEmpty) {
+    if (globalController.products.isEmpty) {
       return maxUid;
     }
-    return widget.products.map((Product e) => e.orderId).reduce(max) + 1;
+    return globalController.products.map((e) => e.uid).reduce(max) + 1;
   }
 
   @override
@@ -71,6 +74,23 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
       nameProduct.value = widget.item!.nameProduct;
       price.value = widget.item!.price;
       orderStatus.value = widget.item!.statusOrder;
+      newQuantity.value = widget.item!.quantity;
+    }
+    if (widget.selling) {
+      // widget.item?.quantity = newQuantity.value;
+      // quantity.value = widget.item!.quantity;
+      group.value = 1;
+      nameCity.value = widget.item!.nameCity;
+      nameProduct.value = widget.item!.nameProduct;
+      price.value = widget.item!.price;
+      newQuantity.value = widget.item!.quantity;
+      globalController.products.forEach((Product e) {
+        if (widget.item!.orderId == e.orderId) {
+          if (e.status == 1 && e.statusOrder != 2) {
+            newQuantity.value -= e.quantity;
+          }
+        }
+      });
     }
     super.initState();
   }
@@ -127,7 +147,7 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
         ),
         const Text("Цена"),
         TextFormField(
-          initialValue: widget.item?.price.toString(),
+          initialValue: price.value.toString(),
           decoration: const InputDecoration(
             isDense: true,
             contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 15),
@@ -140,16 +160,17 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
           height: 20,
         ),
         const Text("Количество товара"),
-        TextFormField(
-          initialValue: widget.item?.quantity.toString(),
-          decoration: const InputDecoration(
-            isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 15),
-          ),
-          onChanged: (value) {
-            quantity.value = int.parse(value);
-          },
-        ),
+        Obx(() => TextFormField(
+              initialValue: newQuantity.value.toString(),
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 0, vertical: 15),
+              ),
+              onChanged: (value) {
+                newQuantity.value = int.parse(value);
+              },
+            )),
         const SizedBox(
           height: 20,
         ),
@@ -184,10 +205,10 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
                 ],
               )),
         if (!widget.edit) const Text("Статус"),
-        if (!widget.edit)
+        if (!widget.edit && !widget.selling)
           Obx(() => RadioListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Продажа'),
+              title: const Text('Покупка'),
               value: 0,
               groupValue: group.value,
               onChanged: (dynamic value) {
@@ -198,7 +219,7 @@ class _ModalAddNewItemState extends State<ModalAddNewItem> {
         if (!widget.edit)
           Obx(() => RadioListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Покупка'),
+              title: const Text('Продажа'),
               value: 1,
               groupValue: group.value,
               onChanged: (dynamic value) {

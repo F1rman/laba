@@ -58,7 +58,6 @@ class _LoginState extends State<Login> {
                 onPressed: () {
                   auth.loginWithEmail(
                       email.value, pass.value, (e) => {print(e)});
-                  Get.toNamed('/Home');
                 },
                 child: Text('Login')),
             TextButton(

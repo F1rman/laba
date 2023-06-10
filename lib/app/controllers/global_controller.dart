@@ -1,12 +1,15 @@
 import 'package:get/get.dart';
 import 'package:laba/app/controllers/firestore.dart';
+import 'package:laba/app/models/product.dart';
 
 
 class GlobalController extends GetxController {
+  final List<String> status = ['Очікування', 'Виконано', 'Відмінено'];
+
   var firestore = Get.find<FirestoreController>();
   RxList cities = [].obs;
   RxList product = [].obs;
-  RxList products = [].obs;
+  RxList<Product> products = [Product(nameCity: 'nameCity', uid: 0, orderId: 1, status: 1, nameProduct: 'nameProduct', price: 1, quantity: 1, sum: 1, statusOrder: 1, date: 1)].obs;
   RxBool loading = true.obs;
 
   late RxList filteredProducts = [].obs;

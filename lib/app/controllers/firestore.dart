@@ -3,11 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-import 'package:laba/app/controllers/global_controller.dart';
-import 'package:laba/app/models/product.dart';
 import 'package:laba/app/models/user/user_model.dart';
-
-import 'auth.dart';
 
 class FirestoreController extends GetxController {
   final String? injectedUID;
